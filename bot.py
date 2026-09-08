@@ -15,7 +15,6 @@ from telegram import (
     Update,
     User,
 )
-from telegram.constants import ParseMode
 from telegram.ext import (
     Application,
     CallbackQueryHandler,
