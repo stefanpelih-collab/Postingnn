@@ -7,30 +7,52 @@ import json
 import logging
 import os
 import re
+import sys
 from pathlib import Path
 
-from telegram import (
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    Update,
-    User,
-)
-from telegram.ext import (
-    Application,
-    CallbackQueryHandler,
-    ContextTypes,
-    MessageHandler,
-    filters,
-)
+print("=== БОТ ПОЧИНАЄ ЗАВАНТАЖЕННЯ ===", flush=True)
+
+try:
+    from telegram import (
+        InlineKeyboardButton,
+        InlineKeyboardMarkup,
+        Update,
+        User,
+    )
+    print("✅ telegram імпортовано успішно", flush=True)
+except Exception as e:
+    print(f"❌ ПОМИЛКА ІМПОРТУ TELEGRAM: {e}", flush=True)
+    sys.exit(1)
+
+try:
+    from telegram.ext import (
+        Application,
+        CallbackQueryHandler,
+        ContextTypes,
+        MessageHandler,
+        filters,
+    )
+    print("✅ telegram.ext імпортовано успішно", flush=True)
+except Exception as e:
+    print(f"❌ ПОМИЛКА ІМПОРТУ TELEGRAM.EXT: {e}", flush=True)
+    sys.exit(1)
 
 TOKEN = os.environ.get("BOT_TOKEN", "ВСТАВЬ_СЮДА_ТОКЕН_ОТ_BOTFATHER")
+print(f"🔑 Токен отримано: {'Так' if TOKEN and TOKEN != 'ВСТАВЬ_СЮДА_ТОКЕН_ОТ_BOTFATHER' else 'Ні'}", flush=True)
+
+if not TOKEN or TOKEN == "ВСТАВЬ_СЮДА_ТОКЕН_ОТ_BOTFATHER":
+    print("❌ ТОКЕН НЕ ВСТАНОВЛЕНО! Додайте змінну BOT_TOKEN на Render", flush=True)
+    sys.exit(1)
+
 DATA_FILE = Path(__file__).with_name("bot_data.json")
+print(f"📁 Файл даних: {DATA_FILE}", flush=True)
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.INFO,
 )
 logger = logging.getLogger("431a_baby_bot")
+print("✅ Логування налаштовано", flush=True)
 
 def load_data() -> dict:
     if DATA_FILE.exists():
@@ -48,7 +70,9 @@ def save_data(data: dict) -> None:
     except Exception:
         logger.exception("Не удалось сохранить файл данных")
 
+print("⏳ Завантаження даних...", flush=True)
 DATA = load_data()
+print("✅ Дані завантажено", flush=True)
 
 def chat_store(chat_id: int) -> dict:
     key = str(chat_id)
@@ -324,20 +348,45 @@ async def on_bot_added(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             )
 
 def main() -> None:
+    print("🚀 ЗАПУСК MAIN ФУНКЦІЇ", flush=True)
+    
     if not TOKEN or TOKEN == "ВСТАВЬ_СЮДА_ТОКЕН_ОТ_BOTFATHER":
+        print("❌ ТОКЕН НЕ ВСТАНОВЛЕНО!", flush=True)
         raise SystemExit(
             "Укажите токен бота в переменной TOKEN или переменной окружения BOT_TOKEN."
         )
-    application = Application.builder().token(TOKEN).build()
-    application.add_handler(
-        MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, on_bot_added)
-    )
-    application.add_handler(MessageHandler(filters.TEXT, router))
-    application.add_handler(
-        CallbackQueryHandler(on_marry_callback, pattern=r"^marry_(yes|no):")
-    )
+    
+    print("🏗️ Створення Application...", flush=True)
+    try:
+        application = Application.builder().token(TOKEN).build()
+        print("✅ Application створено", flush=True)
+    except Exception as e:
+        print(f"❌ ПОМИЛКА ПРИ СТВОРЕННІ APPLICATION: {e}", flush=True)
+        sys.exit(1)
+    
+    print("➕ Додавання обробників...", flush=True)
+    try:
+        application.add_handler(
+            MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, on_bot_added)
+        )
+        application.add_handler(MessageHandler(filters.TEXT, router))
+        application.add_handler(
+            CallbackQueryHandler(on_marry_callback, pattern=r"^marry_(yes|no):")
+        )
+        print("✅ Обробники додано", flush=True)
+    except Exception as e:
+        print(f"❌ ПОМИЛКА ПРИ ДОДАВАННІ ОБРОБНИКІВ: {e}", flush=True)
+        sys.exit(1)
+    
+    print("🤖 ЗАПУСК ПОЛІНГУ...", flush=True)
     logger.info("Бот запущен")
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
+    
+    try:
+        application.run_polling(allowed_updates=Update.ALL_TYPES)
+    except Exception as e:
+        print(f"❌ ПОМИЛКА ПРИ ЗАПУСКУ ПОЛІНГУ: {e}", flush=True)
+        sys.exit(1)
 
 if __name__ == "__main__":
+    print("📌 ПОЧАТОК ПРОГРАМИ", flush=True)
     main()
